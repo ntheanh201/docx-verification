@@ -4,6 +4,10 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BookModule } from './book/book.module';
+import { PageModule } from './page/page.module';
+import { NormalizeModule } from './normalize/normalize.module';
+import { AudioModule } from './audio/audio.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     UserModule,
     AuthModule,
+    BookModule,
+    PageModule,
+    NormalizeModule,
+    AudioModule,
   ],
   controllers: [AppController],
   providers: [AppService],

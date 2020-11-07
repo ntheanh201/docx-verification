@@ -14,7 +14,7 @@ import { LoginController } from './login.controller';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '1y' },
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],

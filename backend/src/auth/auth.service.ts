@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -8,6 +8,7 @@ import { AuthRegisterDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
@@ -24,6 +25,7 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     } catch (e) {
+      this.logger.error(e);
       /* handle error */
       throw new HttpException(
         'Something went wrong',
@@ -39,6 +41,7 @@ export class AuthService {
 
       return { access_token: this.jwtService.sign(payload) };
     } catch (e) {
+      this.logger.error(e);
       throw new HttpException(
         'Something went wrong',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -55,6 +58,7 @@ export class AuthService {
       createdUser.password = undefined;
       return createdUser;
     } catch (e) {
+      this.logger.error(e);
       /* handle error */
       throw new HttpException(
         'Something went wrong',
