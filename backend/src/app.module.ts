@@ -1,25 +1,32 @@
+import { AutomapperModule } from 'nestjsx-automapper';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { BookModule } from './book/book.module';
-import { PageModule } from './page/page.module';
-import { NormalizeModule } from './normalize/normalize.module';
 import { AudioModule } from './audio/audio.module';
+import { AuthModule } from './auth/auth.module';
+import { BookModule } from './book/book.module';
+import { NormalizeModule } from './normalize/normalize.module';
+import { PageModule } from './page/page.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: 'example',
-      database: 'docx_verification',
-      synchronize: true,
-      autoLoadEntities: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB'),
+        synchronize: true,
+        autoLoadEntities: true,
+      }),
     }),
     UserModule,
     AuthModule,
@@ -27,6 +34,8 @@ import { AudioModule } from './audio/audio.module';
     PageModule,
     NormalizeModule,
     AudioModule,
+    AutomapperModule.withMapper(),
+    ConfigModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

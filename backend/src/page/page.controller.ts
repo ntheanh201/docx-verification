@@ -9,25 +9,20 @@ import {
   Body,
   UseGuards,
   ParseIntPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectMapper } from 'nestjsx-automapper';
-
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserVm } from 'src/user/user.dto';
-
 import { Page, PageStatus } from './page.entity';
 import { PageService } from './page.service';
 import {
-  PageCountDto,
   PageGenAudioDto,
-  PageGetDto,
   PageMarkVerifiedDto,
   PageUpdateTextNormDto,
   PageVm,
 } from './page.dto';
 import { User } from '../user/user.decorator';
-import { NormalizeService } from 'src/normalize/normalize.service';
-import { AudioService } from 'src/audio/audio.service';
 
 @Controller('page')
 @ApiBearerAuth()
@@ -36,37 +31,25 @@ export class PageController {
   constructor(
     private service: PageService,
     @InjectMapper() private mapper: AutoMapper,
-    private normalizeService: NormalizeService,
-    private audioService: AudioService,
   ) {}
-  @Get(':book/:page')
+  @Get('/:book/:page/info')
   async get(
-    //use for swagger
-    @Param() _: PageGetDto,
-    @Param('book_id', ParseIntPipe) book_id: number,
-    @Param('page_id', ParseIntPipe) page: number,
+    @Param('book', ParseIntPipe) book_id: number,
+    @Param('page', ParseIntPipe) page: number,
     @User() user: UserVm,
   ) {
-    let result = await this.service.get(book_id, page);
-    //check if raw_text is not empty and text_norm is empty (not normlized)
-    //then normlize it
-    if (result.text_norm === '' && result.text_raw !== '') {
-      const normalize = await this.normalizeService.normalize(result.text_raw);
-      if (normalize.status && normalize.normText !== '') {
-        result = await this.service.updateTextNormAndReviewer(
-          page,
-          user.id,
-          normalize.normText,
-        );
-      }
+    let result = await this.service.getAndGetNormlizedText(
+      book_id,
+      page,
+      user.id,
+    );
+    if (!result) {
+      throw new NotFoundException();
     }
     return this.mapper.map(result, PageVm, Page);
   }
-  @Get('/count/:book')
-  async count(
-    @Param() _: PageCountDto,
-    @Param('book', ParseIntPipe) book_id: number,
-  ) {
+  @Get('count/:book')
+  async count(@Param('book', ParseIntPipe) book_id: number) {
     const result = await this.service.countPages(book_id);
     return { pages: result };
   }
@@ -80,20 +63,18 @@ export class PageController {
       user.id,
       body.text_norm,
     );
+    if (!result) {
+      throw new NotFoundException();
+    }
     return this.mapper.map(result, PageVm, Page);
   }
   @Post('gen_audio')
   async genAudio(@Body() body: PageGenAudioDto) {
-    const page: Page = await this.service.findOne(body.page_id);
-    this.audioService.publish(
-      { page_id: page.id, text: page.text_norm },
-      (c) => {
-        page.task_id = c.task_id;
-        this.service.save(page);
-      },
-    );
-    //call api and save task_id
-    //then push this task_id to backoff
+    const result = await this.service.genAudio(body.page_id);
+    if (result === undefined) {
+      throw new NotFoundException();
+    }
+    return { status: 'success' };
   }
   @Put('verified')
   async markVerified(@Body() body: PageMarkVerifiedDto, @User() user: UserVm) {
@@ -102,6 +83,9 @@ export class PageController {
       user.id,
       PageStatus.Verified,
     );
+    if (!result) {
+      throw new NotFoundException();
+    }
     return this.mapper.map(result, PageVm, Page);
   }
 }

@@ -4,11 +4,12 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export class Page {
   @PrimaryGeneratedColumn()
   id?: number;
+  @Column()
   book_id: number;
   @Column()
   page_num: number;
   @Column()
-  status: string;
+  status: PageStatus;
   @Column()
   reviewer: number;
   @Column()
@@ -16,7 +17,13 @@ export class Page {
   @Column()
   text_norm: string;
   @Column()
-  task_id: number;
+  task_id: string;
   @Column()
   audio_url: string;
+}
+
+export enum PageStatus {
+  Waiting = 'waiting',
+  Pending = 'pending',
+  Verified = 'verified',
 }

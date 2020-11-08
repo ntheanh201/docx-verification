@@ -14,15 +14,25 @@ export class BookService {
       name: file.originalname,
       url: file.path,
       uploader: userID,
+      size: file.size,
+      saved_name: file.filename,
+      mimetype: file.mimetype,
     };
     let newBook = this.bookRepo.create(book);
     return this.bookRepo.save(newBook);
   }
   async findFrom(offset: number, limit: number): Promise<Book[]> {
-    return this.bookRepo.find({ skip: offset, take: limit });
+    return this.bookRepo.find({
+      skip: offset,
+      take: limit,
+      relations: ['uploader'],
+    });
   }
   async delete(id: number): Promise<number> {
     const result = await this.bookRepo.delete(id);
     return result.affected;
+  }
+  count(): Promise<number> {
+    return this.bookRepo.count();
   }
 }

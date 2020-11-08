@@ -4,12 +4,13 @@ import { Book } from './book.entity';
 import { BookService } from './book.service';
 import { BookController } from './book.controller';
 import { MulterModule } from '@nestjs/platform-express';
-import * as path from 'path';
+import { uploadDir } from './constant';
+import './book.profile';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Book]),
-    MulterModule.register({ dest: path.join(__dirname, 'uploads') }),
+    MulterModule.register({ dest: uploadDir }),
   ],
   providers: [BookService],
   controllers: [BookController],

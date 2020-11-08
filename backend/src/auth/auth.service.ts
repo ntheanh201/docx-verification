@@ -1,3 +1,5 @@
+import { AutoMapper } from '@nartc/automapper';
+import { InjectMapper } from 'nestjsx-automapper';
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -5,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/user/user.service';
 
 import { AuthRegisterDto } from './auth.dto';
+import { UserVm } from 'src/user/user.dto';
+import { User } from 'src/user/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,13 +16,13 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
+    @InjectMapper() private mapper: AutoMapper,
   ) {}
   async validateUser(username: string, password: string): Promise<any> {
     try {
       const user = await this.userService.findByUsername(username);
       if (await bcrypt.compare(password, user.password)) {
-        const { password, ...result } = user;
-        return result;
+        return this.mapper.map(user, UserVm, User);
       }
       throw new HttpException(
         'Wrong credentials provided',
@@ -55,8 +59,7 @@ export class AuthService {
         ...data,
         password: hashedPassword,
       });
-      createdUser.password = undefined;
-      return createdUser;
+      return this.mapper.map(createdUser, UserVm, User);
     } catch (e) {
       this.logger.error(e);
       /* handle error */
