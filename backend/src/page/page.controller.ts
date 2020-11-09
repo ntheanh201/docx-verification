@@ -35,12 +35,12 @@ export class PageController {
   @Get('/:book/:page/info')
   async get(
     @Param('book', ParseIntPipe) book_id: number,
-    @Param('page', ParseIntPipe) page: number,
+    @Param('page', ParseIntPipe) page_id: number,
     @User() user: UserVm,
   ) {
     let result = await this.service.getAndGetNormlizedText(
       book_id,
-      page,
+      page_id,
       user.id,
     );
     if (!result) {

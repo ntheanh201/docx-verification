@@ -36,12 +36,14 @@ export class PageMarkVerifiedDto {
 }
 
 export class PageGetDto {
-  @ApiProperty({ example: '0' })
+  @ApiProperty({ example: 0 })
   @IsNumberString()
-  book_id: string;
-  @ApiProperty({ example: '0' })
+  @Min(0)
+  book: number;
+  @ApiProperty({ example: 0 })
   @IsNumberString()
-  page_id: string;
+  @Min(0)
+  page: number;
 }
 
 export class PageCountDto {
