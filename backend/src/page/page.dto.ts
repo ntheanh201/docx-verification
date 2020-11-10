@@ -6,6 +6,7 @@ export class PageCreateDto {
   book_id: number;
   page_num: number;
   text_raw: string;
+  text_norm: string;
 }
 
 export class PageVm {

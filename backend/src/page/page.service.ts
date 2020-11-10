@@ -1,19 +1,26 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { AudioService } from '../audio/audio.service';
 import { NormalizeService } from '../normalize/normalize.service';
 import { Page, PageStatus } from './page.entity';
 import { PageCreateDto } from './page.dto';
+import { AudioResponseDto } from 'src/audio/audio.dto';
 
 @Injectable()
 export class PageService {
+  private logger = new Logger(PageService.name);
   constructor(
     @InjectRepository(Page) private repo: Repository<Page>,
     private normalizeService: NormalizeService,
     private audioService: AudioService,
-  ) {}
+  ) {
+    this.audioService.subscribe((a: AudioResponseDto) => {
+      this.logger.debug('resolve audio :' + JSON.stringify(a));
+      this.updateAudioURL(a.page_id, a.url);
+    });
+  }
   async getAndGetNormlizedText(
     book_id: number,
     page: number,
@@ -48,10 +55,20 @@ export class PageService {
       book_id: page.book_id,
       page_num: page.page_num,
       text_raw: page.text_raw,
+      text_norm: page.text_norm,
       //
       status: PageStatus.Waiting,
     });
     return this.repo.save(newPage);
+  }
+  async creates(pages: PageCreateDto[]): Promise<any[]> {
+    const result = await this.repo
+      .createQueryBuilder()
+      .insert()
+      .into(Page)
+      .values(pages.map((page) => ({ ...page, status: PageStatus.Waiting })))
+      .execute();
+    return result.identifiers;
   }
   async updateTextNormAndReviewer(
     page_id: number,
@@ -119,7 +136,7 @@ export class PageService {
     this.audioService.publish(
       { page_id: page.id, text: page.text_norm },
       (c) => {
-        page.task_id = c.task_id;
+        page.task_id = c.id;
         page.status = PageStatus.Pending;
         this.save(page);
       },

@@ -11,6 +11,7 @@ import { BookModule } from './book/book.module';
 import { NormalizeModule } from './normalize/normalize.module';
 import { PageModule } from './page/page.module';
 import { UserModule } from './user/user.module';
+import { DocxModule } from './docx/docx.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UserModule } from './user/user.module';
     AudioModule,
     AutomapperModule.withMapper(),
     ConfigModule.forRoot(),
+    DocxModule,
   ],
   controllers: [AppController],
   providers: [AppService],

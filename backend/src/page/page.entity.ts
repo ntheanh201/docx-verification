@@ -10,15 +10,15 @@ export class Page {
   page_num: number;
   @Column()
   status: PageStatus;
-  @Column()
+  @Column({ nullable: true })
   reviewer: number;
-  @Column()
+  @Column({ type: 'nvarchar', length: 10000 })
   text_raw: string;
-  @Column()
+  @Column({ type: 'nvarchar', length: 10000 })
   text_norm: string;
-  @Column()
+  @Column({ nullable: true })
   task_id: string;
-  @Column()
+  @Column({ nullable: true })
   audio_url: string;
 }
 

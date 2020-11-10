@@ -12,10 +12,25 @@ export class AudioResponseDto extends AudioTaskDto {
 }
 
 export class callGetTaskApiResponse {
-  task_id: string;
+  id: string;
 }
 
 export class callCheckTaskApiResponse {
+  id: string;
+  msg: string;
+  progress: number;
   url: string;
-  status: string;
+  status: number;
+}
+
+export class callInfoResponse {
+  'msg': string;
+  'status': number;
+  'version': string;
+  'voices': voice[];
+}
+
+export class voice {
+  id: string;
+  name: string;
 }

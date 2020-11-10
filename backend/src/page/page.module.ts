@@ -11,5 +11,6 @@ import { AudioModule } from 'src/audio/audio.module';
   imports: [TypeOrmModule.forFeature([Page]), NormalizeModule, AudioModule],
   providers: [PageService],
   controllers: [PageController],
+  exports: [PageService],
 })
 export class PageModule {}

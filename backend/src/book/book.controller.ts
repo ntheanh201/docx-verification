@@ -26,6 +26,7 @@ import * as fs from 'fs';
 import { AutoMapper } from '@nartc/automapper';
 import { Book } from './book.entity';
 import { InjectMapper } from 'nestjsx-automapper';
+import { DocxService } from 'src/docx/docx.service';
 
 @Controller('book')
 @ApiBearerAuth()
@@ -34,17 +35,14 @@ export class BookController {
   private readonly logger = new Logger(BookController.name);
   private readonly pageSize = 10;
   constructor(
-    private bookService: BookService,
+    private readonly bookService: BookService,
     @InjectMapper() private readonly mapper: AutoMapper,
   ) {}
   @UseInterceptors(FileInterceptor('file'))
   @Post('upload')
   async upload(@UploadedFile() file: BookUploadDto, @User() user: any) {
     this.logger.debug(`upload new book : ${file.originalname}`);
-    const newBook = await this.bookService.create(user.id, file);
-    //call get content API
-    //save page content to page repo
-    return newBook;
+    return await this.bookService.create(user.id, file);
   }
   @Get()
   async list(@Query('page', ParseIntPipe) page: number) {

@@ -6,11 +6,15 @@ import { BookController } from './book.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { uploadDir } from './constant';
 import './book.profile';
+import { DocxModule } from 'src/docx/docx.module';
+import { PageModule } from 'src/page/page.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Book]),
     MulterModule.register({ dest: uploadDir }),
+    DocxModule,
+    PageModule,
   ],
   providers: [BookService],
   controllers: [BookController],

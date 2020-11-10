@@ -10,6 +10,10 @@ export class PageProfile extends ProfileBase {
     mapper
       .createMap(Page, PageVm)
       .forMember(
+        (d) => d.id,
+        mapFrom((s) => s.id),
+      )
+      .forMember(
         (d) => d.book_id,
         mapFrom((s) => s.book_id),
       )

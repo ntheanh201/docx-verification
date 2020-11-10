@@ -32,6 +32,7 @@
     "@nestjs/typeorm": "^7.1.4",
     "@types/bcrypt": "^3.0.0",
     "bcrypt": "^5.0.0",
+    "form-data": "^3.0.0",
     "helmet": "^4.2.0",
     "mysql": "^2.18.1",
     "nestjsx-automapper": "^3.1.4",
