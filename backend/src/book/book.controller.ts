@@ -15,7 +15,7 @@ import {
   Response,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/user/user.decorator';
 import { BookUploadDto, BookVm } from './book.dto';
@@ -26,7 +26,6 @@ import * as fs from 'fs';
 import { AutoMapper } from '@nartc/automapper';
 import { Book } from './book.entity';
 import { InjectMapper } from 'nestjsx-automapper';
-import { DocxService } from 'src/docx/docx.service';
 
 @Controller('book')
 @ApiBearerAuth()
@@ -40,6 +39,13 @@ export class BookController {
   ) {}
   @UseInterceptors(FileInterceptor('file'))
   @Post('upload')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   async upload(@UploadedFile() file: BookUploadDto, @User() user: any) {
     this.logger.debug(`upload new book : ${file.originalname}`);
     return await this.bookService.create(user.id, file);
