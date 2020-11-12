@@ -31,7 +31,7 @@ export class BookService {
     let newBook = this.bookRepo.create(book);
     const result = await this.bookRepo.save(newBook);
     const parseResult = await this.docxService.parse(result.url);
-    await this.saveAllPages(result.id, parseResult);
+    await this.saveAllPages(userID, result.id, parseResult);
     return result;
   }
   async findFrom(offset: number, limit: number): Promise<Book[]> {
@@ -41,14 +41,21 @@ export class BookService {
       relations: ['uploader'],
     });
   }
-  async delete(id: number): Promise<number> {
-    const result = await this.bookRepo.delete(id);
+  async delete(user_id: number, id: number): Promise<number> {
+    const result = await this.bookRepo.delete({ id, uploader: user_id });
+    if (result.affected > 0) {
+      await this.pageService.deleteAllPages(id);
+    }
     return result.affected;
   }
   count(): Promise<number> {
     return this.bookRepo.count();
   }
-  private async saveAllPages(book_id: number, data: DocxParseDto) {
+  private async saveAllPages(
+    user: number,
+    book_id: number,
+    data: DocxParseDto,
+  ) {
     const pages: PageCreateDto[] = [];
     for (var i = 0, len = data.normed_pages.length; i < len; i++) {
       const norm = data.normed_pages[i];
@@ -58,6 +65,7 @@ export class BookService {
         page_num: i,
         text_raw: raw,
         text_norm: norm,
+        uploader: user,
       });
     }
     //

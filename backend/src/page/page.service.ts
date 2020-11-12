@@ -24,7 +24,7 @@ export class PageService {
   async getAndGetNormlizedText(
     book_id: number,
     page: number,
-    user_id: number,
+    user: number,
   ): Promise<Page | undefined> {
     let result = await this.get(book_id, page);
     if (!result) {
@@ -37,7 +37,7 @@ export class PageService {
       if (normalize.status && normalize.normText !== '') {
         result = await this.updateTextNormAndReviewer(
           page,
-          user_id,
+          user,
           normalize.normText,
         );
       }
@@ -56,6 +56,7 @@ export class PageService {
       page_num: page.page_num,
       text_raw: page.text_raw,
       text_norm: page.text_norm,
+      uploader: page.uploader,
       //
       status: PageStatus.Waiting,
     });
@@ -142,5 +143,9 @@ export class PageService {
       },
     );
     return true;
+  }
+  async deleteAllPages(book_id: number): Promise<number> {
+    const result = await this.repo.delete({ book_id });
+    return result.affected;
   }
 }

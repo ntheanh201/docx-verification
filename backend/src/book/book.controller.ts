@@ -26,8 +26,9 @@ import * as fs from 'fs';
 import { AutoMapper } from '@nartc/automapper';
 import { Book } from './book.entity';
 import { InjectMapper } from 'nestjsx-automapper';
+import { UserVm } from 'src/user/user.dto';
 
-@Controller('book')
+@Controller('books')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class BookController {
@@ -46,31 +47,34 @@ export class BookController {
       properties: { file: { type: 'string', format: 'binary' } },
     },
   })
-  async upload(@UploadedFile() file: BookUploadDto, @User() user: any) {
+  async upload(@UploadedFile() file: BookUploadDto, @User() user: UserVm) {
     this.logger.debug(`upload new book : ${file.originalname}`);
     return await this.bookService.create(user.id, file);
   }
   @Get()
-  async list(@Query('page', ParseIntPipe) page: number) {
+  async list(@Query('page', ParseIntPipe) page: number, @User() user: UserVm) {
     if (page < 0) {
       throw new BadRequestException('page must be greater than 0');
     }
     const offset = page * this.pageSize;
-    const result = await this.bookService.findFrom(offset, this.pageSize);
-    return this.mapper.mapArray(result, BookVm, Book);
+    const books = await this.bookService.findFrom(offset, this.pageSize);
+    const vmBooks = this.mapper.mapArray(books, BookVm, Book);
+    const total = await this.bookService.count();
+    return {
+      books: vmBooks,
+      current_page: page,
+      total_pages: Math.ceil(total / this.pageSize),
+      page_size: this.pageSize,
+    };
   }
-  @Get('count')
-  async count() {
-    const books = await this.bookService.count();
-    return { pages: books };
-  }
+
   @Delete('/:id')
-  async del(@Param('id', ParseIntPipe) id: number) {
-    const affected = await this.bookService.delete(id);
-    return { affected };
+  async del(@Param('id', ParseIntPipe) id: number, @User() user: UserVm) {
+    const affected = await this.bookService.delete(user.id, id);
+    return { books: affected };
   }
-  @Get('download/:name')
-  async download(@Param('name') name: string, @Response() res: any) {
+  @Get('download/:saved_name')
+  async download(@Param('saved_name') name: string, @Response() res: any) {
     const filePath = path.join(uploadDir, name);
     try {
       await new Promise((resolve, reject) =>

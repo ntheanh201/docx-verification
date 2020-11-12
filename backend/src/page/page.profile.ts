@@ -32,6 +32,10 @@ export class PageProfile extends ProfileBase {
       .forMember(
         (d) => d.task_id,
         mapFrom((s) => s.task_id),
+      )
+      .forMember(
+        (d) => d.uploader,
+        mapFrom((s) => s.uploader),
       );
   }
 }

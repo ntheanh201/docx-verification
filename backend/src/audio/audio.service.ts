@@ -103,7 +103,7 @@ export class AudioService {
   private scheduleCheckTasksStatus() {
     setInterval(async () => {
       const remainTasks: AudioTaskDto[] = [];
-      this.logger.debug('check queue');
+      // this.logger.debug('check queue');
       for (let task of this.queues) {
         this.logger.debug('check task: ' + JSON.stringify(task));
         const res = await this.checkTaskStatus(task.task_id);

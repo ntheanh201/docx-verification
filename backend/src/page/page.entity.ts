@@ -20,6 +20,8 @@ export class Page {
   task_id: string;
   @Column({ nullable: true })
   audio_url: string;
+  @Column()
+  uploader: number;
 }
 
 export enum PageStatus {

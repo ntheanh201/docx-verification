@@ -7,6 +7,7 @@ export class PageCreateDto {
   page_num: number;
   text_raw: string;
   text_norm: string;
+  uploader: number;
 }
 
 export class PageVm {
@@ -19,6 +20,7 @@ export class PageVm {
   text_norm: string;
   task_id: string;
   audio_url: string;
+  uploader: number;
 }
 
 export class PageUpdateTextNormDto {

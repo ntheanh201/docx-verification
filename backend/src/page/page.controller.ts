@@ -24,7 +24,7 @@ import {
 } from './page.dto';
 import { User } from '../user/user.decorator';
 
-@Controller('page')
+@Controller('pages')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class PageController {
