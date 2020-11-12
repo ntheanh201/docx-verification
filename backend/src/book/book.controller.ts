@@ -52,7 +52,7 @@ export class BookController {
     return await this.bookService.create(user.id, file);
   }
   @Get()
-  async list(@Query('page', ParseIntPipe) page: number, @User() user: UserVm) {
+  async list(@Query('page', ParseIntPipe) page: number) {
     if (page < 0) {
       throw new BadRequestException('page must be greater than 0');
     }

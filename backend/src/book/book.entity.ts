@@ -2,6 +2,11 @@ import { User } from 'src/user/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { AutoMap } from '@nartc/automapper';
 
+export enum BookStatus {
+  Pending = 'pending',
+  Done = 'done',
+}
+
 @Entity()
 export class Book {
   @AutoMap()
@@ -21,6 +26,13 @@ export class Book {
   @AutoMap()
   @Column()
   mimetype: string;
+  @AutoMap()
+  @Column({ nullable: true })
+  total_pages: number;
+
+  @AutoMap()
+  @Column()
+  status: BookStatus;
 
   @AutoMap()
   @ManyToOne(() => User)

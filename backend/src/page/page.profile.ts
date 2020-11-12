@@ -36,6 +36,18 @@ export class PageProfile extends ProfileBase {
       .forMember(
         (d) => d.uploader,
         mapFrom((s) => s.uploader),
+      )
+      .forMember(
+        (d) => d.audio_url,
+        mapFrom((s) => s.audio_url),
+      )
+      .forMember(
+        (d) => d.status,
+        mapFrom((s) => s.status),
+      )
+      .forMember(
+        (d) => d.reviewer,
+        mapFrom((s) => s.reviewer),
       );
   }
 }

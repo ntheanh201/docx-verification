@@ -1,5 +1,5 @@
 import { PageStatus } from './page.entity';
-import { IsNumberString, Min, IsNumber } from 'class-validator';
+import { IsNumberString, Min, IsNumber, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PageCreateDto {
@@ -28,7 +28,7 @@ export class PageUpdateTextNormDto {
   @Min(0)
   page_id: number;
   @ApiProperty({ example: 0 })
-  @Min(0)
+  @MinLength(0)
   text_norm: string;
 }
 

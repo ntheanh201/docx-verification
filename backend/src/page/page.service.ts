@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Injectable, Logger } from '@nestjs/common';
+import { IsNull, Repository, Not } from 'typeorm';
 
 import { AudioService } from '../audio/audio.service';
 import { NormalizeService } from '../normalize/normalize.service';
@@ -20,6 +20,7 @@ export class PageService {
       this.logger.debug('resolve audio :' + JSON.stringify(a));
       this.updateAudioURL(a.page_id, a.url);
     });
+    this.recoverNotCompletedTasks()
   }
   async getAndGetNormlizedText(
     book_id: number,
@@ -147,5 +148,19 @@ export class PageService {
   async deleteAllPages(book_id: number): Promise<number> {
     const result = await this.repo.delete({ book_id });
     return result.affected;
+  }
+  loadNotCompletedTasks() {
+    return this.repo.find({ audio_url: IsNull(), task_id: Not(IsNull()) });
+  }
+  async recoverNotCompletedTasks() {
+    const pages = await this.loadNotCompletedTasks();
+    this.audioService.recover(
+      pages.map((page) => ({
+        page_id: page.id,
+        text: page.text_norm,
+        task_id: page.task_id,
+      })),
+    );
+    this.logger.log('recover: ' + pages.length + ' tasks')
   }
 }

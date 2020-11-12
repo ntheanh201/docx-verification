@@ -48,11 +48,11 @@ export class PageController {
     }
     return this.mapper.map(result, PageVm, Page);
   }
-  @Get('count/:book')
-  async count(@Param('book', ParseIntPipe) book_id: number) {
-    const result = await this.service.countPages(book_id);
-    return { pages: result };
-  }
+  // @Get('count/:book')
+  // async count(@Param('book', ParseIntPipe) book_id: number) {
+  //   const result = await this.service.countPages(book_id);
+  //   return { pages: result };
+  // }
   @Put('norm_text')
   async updateNormText(
     @Body() body: PageUpdateTextNormDto,

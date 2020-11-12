@@ -4,8 +4,9 @@ import { Repository } from 'typeorm';
 
 import { DocxParseDto } from 'src/docx/docx.dto';
 import { PageCreateDto } from 'src/page/page.dto';
+import * as fs from 'fs';
 
-import { Book } from './book.entity';
+import { Book, BookStatus } from './book.entity';
 import { BookUploadDto } from './book.dto';
 import { DocxService } from '../docx/docx.service';
 import { PageService } from '../page/page.service';
@@ -27,11 +28,18 @@ export class BookService {
       size: file.size,
       saved_name: file.filename,
       mimetype: file.mimetype,
+      total_pages: 0,
+      status: BookStatus.Pending,
     };
     let newBook = this.bookRepo.create(book);
     const result = await this.bookRepo.save(newBook);
-    const parseResult = await this.docxService.parse(result.url);
-    await this.saveAllPages(userID, result.id, parseResult);
+
+    await this.docxService.parse(file.path).then(async (parseResult) => {
+      await this.saveAllPages(userID, result.id, parseResult);
+      result.total_pages = parseResult.original_pages.length;
+      result.status = BookStatus.Done;
+      this.bookRepo.save(result);
+    });
     return result;
   }
   async findFrom(offset: number, limit: number): Promise<Book[]> {
@@ -42,10 +50,22 @@ export class BookService {
     });
   }
   async delete(user_id: number, id: number): Promise<number> {
-    const result = await this.bookRepo.delete({ id, uploader: user_id });
-    if (result.affected > 0) {
-      await this.pageService.deleteAllPages(id);
+    const book = await this.bookRepo.findOne({ id, uploader: user_id });
+    if (!book) {
+      return 0;
     }
+    const result = await this.bookRepo.delete(id);
+    await this.pageService.deleteAllPages(id);
+    const that = this;
+    fs.stat(book.url, function (err, stats) {
+      if (!err && stats.isFile()) {
+        fs.unlink(book.url, function (err) {
+          if (err) {
+            that.logger.error(err);
+          }
+        });
+      }
+    });
     return result.affected;
   }
   count(): Promise<number> {
@@ -70,6 +90,6 @@ export class BookService {
     }
     //
     const result = await this.pageService.creates(pages);
-    this.logger.debug('save all pages: ' + JSON.stringify(result));
+    this.logger.debug('save all pages: ' + result.length);
   }
 }

@@ -35,6 +35,7 @@ export class AudioService {
     this.subscribers = [];
     this.scheduleCheckTasksStatus();
   }
+  
   recover(tasks: AudioTaskDto[]) {
     this.queues.push(...tasks);
   }

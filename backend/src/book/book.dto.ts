@@ -32,4 +32,6 @@ export class BookVm {
   mimetype: string;
   @AutoMap(() => UserVm)
   uploader: UserVm;
+  @AutoMap()
+  total_pages: number;
 }

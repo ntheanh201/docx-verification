@@ -8,9 +8,15 @@ import { BookVm } from './book.dto';
 export class BookProfile extends ProfileBase {
   constructor(mapper: AutoMapper) {
     super();
-    mapper.createMap(Book, BookVm).forMember(
-      (d) => d.saved_name,
-      mapFrom((s) => s.saved_name),
-    );
+    mapper
+      .createMap(Book, BookVm)
+      .forMember(
+        (d) => d.saved_name,
+        mapFrom((s) => s.saved_name),
+      )
+      .forMember(
+        (d) => d.total_pages,
+        mapFrom((d) => d.total_pages),
+      );
   }
 }
