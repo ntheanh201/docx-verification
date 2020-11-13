@@ -68,6 +68,11 @@ export class BookController {
     };
   }
 
+  @Get('/:id')
+  async get(@Param('id', ParseIntPipe) id: number) {
+    return this.bookService.findOne(id);
+  }
+
   @Delete('/:id')
   async del(@Param('id', ParseIntPipe) id: number, @User() user: UserVm) {
     const affected = await this.bookService.delete(user.id, id);

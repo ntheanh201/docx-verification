@@ -92,4 +92,7 @@ export class BookService {
     const result = await this.pageService.creates(pages);
     this.logger.debug('save all pages: ' + result.length);
   }
+  async findOne(id: number): Promise<Book> {
+    return this.bookRepo.findOne(id);
+  }
 }
