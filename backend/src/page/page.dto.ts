@@ -21,13 +21,14 @@ export class PageVm {
   task_id: string;
   audio_url: string;
   uploader: number;
+  voice_id: string;
 }
 
 export class PageUpdateTextNormDto {
   @ApiProperty({ example: 0 })
   @Min(0)
   page_id: number;
-  @ApiProperty({ example: 0 })
+  @ApiProperty()
   @MinLength(0)
   text_norm: string;
 }
@@ -60,4 +61,6 @@ export class PageGenAudioDto {
   @IsNumber()
   @Min(0)
   page_id: number;
+  @ApiProperty()
+  voice_id: string;
 }

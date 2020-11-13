@@ -48,6 +48,10 @@ export class PageProfile extends ProfileBase {
       .forMember(
         (d) => d.reviewer,
         mapFrom((s) => s.reviewer),
+      )
+      .forMember(
+        (d) => d.voice_id,
+        mapFrom((s) => s.voice_id),
       );
   }
 }

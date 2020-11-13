@@ -24,6 +24,7 @@ export class AudioService {
   private getTaskAPI: string;
   private getInfoAPI: string;
   private checkTaskStatusAPI: string;
+  private token: string;
   private queues: AudioTaskDto[];
   private subscribers: Subscriber[];
   private logger = new Logger(AudioService.name);
@@ -31,22 +32,24 @@ export class AudioService {
     this.getTaskAPI = configService.get<string>('AUDIO_GET_TASK_API');
     this.checkTaskStatusAPI = configService.get<string>('AUDIO_CHECK_TASK_API');
     this.getInfoAPI = configService.get<string>('AUDIO_INFO_API');
+    this.token = configService.get('AUDIO_TOKEN');
     this.queues = [];
     this.subscribers = [];
     this.scheduleCheckTasksStatus();
   }
-  
+
   recover(tasks: AudioTaskDto[]) {
     this.queues.push(...tasks);
   }
   async publish(task: AudioPublishDto, cb: QueueTaskCallback) {
-    this.logger.debug('publish new task: ' + JSON.stringify(task));
+    this.logger.debug('publish new task: ' + task.page_id);
     const taskResponse: callGetTaskApiResponse = await this.getTaskID(task);
     this.logger.debug('init task: ' + JSON.stringify(taskResponse));
     cb(taskResponse);
     this.queues.push({
       task_id: taskResponse.id,
       page_id: task.page_id,
+      voice_id: task.voice_id,
     });
   }
   subscribe(sub: Subscriber) {
@@ -55,10 +58,8 @@ export class AudioService {
   unsubscribe(sub: Subscriber) {
     this.subscribers = this.subscribers.filter((s) => s !== sub);
   }
-  // TODO: edit it
-  private async getTaskID(
-    task: AudioPublishDto,
-  ): Promise<callGetTaskApiResponse> {
+
+  getVoices(): Promise<callInfoResponse> {
     return this.httpService
       .get(this.getInfoAPI)
       .pipe(
@@ -67,21 +68,28 @@ export class AudioService {
             return res.data;
           },
         ),
+        catchError((e) => {
+          this.logger.error(e.toString());
+          throw e;
+        }),
       )
-      .pipe(
-        map(async (res: callInfoResponse) => {
-          var data = new FormData();
-          data.append('token', 'WNBIUqP5TUje5piwbbfLU21itCfoOLRD');
-          data.append('voiceId', res.voices[0].id);
-          data.append('text', task.text);
+      .toPromise();
+  }
+  private async getTaskID(
+    task: AudioPublishDto,
+  ): Promise<callGetTaskApiResponse> {
+    var data = new FormData();
+    data.append('token', this.token);
+    data.append('voiceId', task.voice_id);
+    data.append('text', task.text);
 
-          return await this.httpService
-            .post(this.getTaskAPI, data, { headers: data.getHeaders() })
-            .pipe(
-              map((res: AxiosResponse) => res.data),
-              catchError((err) => of({ message: err.toString() })),
-            )
-            .toPromise();
+    return await this.httpService
+      .post(this.getTaskAPI, data, { headers: data.getHeaders() })
+      .pipe(
+        map((res: AxiosResponse) => res.data),
+        catchError((err) => {
+          this.logger.error(err.toString());
+          throw err;
         }),
       )
       .toPromise();
@@ -106,7 +114,7 @@ export class AudioService {
       const remainTasks: AudioTaskDto[] = [];
       // this.logger.debug('check queue');
       for (let task of this.queues) {
-        this.logger.debug('check task: ' + JSON.stringify(task));
+        this.logger.debug('check task: ' + task.task_id);
         const res = await this.checkTaskStatus(task.task_id);
         this.logger.debug('task status response: ' + JSON.stringify(res));
         if (res.status === 0) {

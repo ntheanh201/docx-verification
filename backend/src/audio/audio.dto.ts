@@ -1,10 +1,12 @@
 export class AudioTaskDto {
   page_id: number;
   task_id: string;
+  voice_id: string;
 }
 export class AudioPublishDto {
   page_id: number;
   text: string;
+  voice_id: string;
 }
 
 export class AudioResponseDto extends AudioTaskDto {

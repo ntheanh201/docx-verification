@@ -36,13 +36,8 @@ export class PageController {
   async get(
     @Param('book', ParseIntPipe) book_id: number,
     @Param('page', ParseIntPipe) page_id: number,
-    @User() user: UserVm,
   ) {
-    let result = await this.service.getAndGetNormlizedText(
-      book_id,
-      page_id,
-      user.id,
-    );
+    let result = await this.service.getAndGetNormlizedText(book_id, page_id);
     if (!result) {
       throw new NotFoundException();
     }
@@ -70,7 +65,7 @@ export class PageController {
   }
   @Post('gen_audio')
   async genAudio(@Body() body: PageGenAudioDto) {
-    const result = await this.service.genAudio(body.page_id);
+    const result = await this.service.genAudio(body.page_id, body.voice_id);
     if (result === undefined) {
       throw new NotFoundException();
     }

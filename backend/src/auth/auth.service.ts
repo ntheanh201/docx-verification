@@ -1,6 +1,12 @@
 import { AutoMapper } from '@nartc/automapper';
 import { InjectMapper } from 'nestjsx-automapper';
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  Logger,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -19,25 +25,16 @@ export class AuthService {
     @InjectMapper() private mapper: AutoMapper,
   ) {}
   async validateUser(username: string, password: string): Promise<any> {
-    try {
-      const user = await this.userService.findByUsername(username);
-      if (await bcrypt.compare(password, user.password)) {
-        return this.mapper.map(user, UserVm, User);
-      }
-      throw new HttpException(
-        'Wrong credentials provided',
-        HttpStatus.BAD_REQUEST,
-      );
-    } catch (e) {
-      this.logger.error(e);
-      /* handle error */
-      throw new HttpException(
-        'Something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    const user = await this.userService.findByUsername(username);
+    if (!user) {
+      throw new BadRequestException('username or password does not match');
     }
+    if (await bcrypt.compare(password, user.password)) {
+      return this.mapper.map(user, UserVm, User);
+    }
+    throw new BadRequestException('username or password does not match');
   }
-  async login(user: any) {
+  async login(user: UserVm) {
     try {
       const { password, ...payload } = await this.userService.findByUsername(
         user.username,
@@ -54,6 +51,10 @@ export class AuthService {
   }
   async register(data: AuthRegisterDto) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
+    const existsUser = await this.userService.findByUsername(data.username);
+    if (existsUser) {
+      throw new BadRequestException(`username ${data.username} already exists`);
+    }
     try {
       const createdUser = await this.userService.create({
         ...data,

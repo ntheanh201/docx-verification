@@ -19,6 +19,8 @@ export class Page {
   @Column({ nullable: true })
   task_id: string;
   @Column({ nullable: true })
+  voice_id: string;
+  @Column({ nullable: true })
   audio_url: string;
   @Column()
   uploader: number;

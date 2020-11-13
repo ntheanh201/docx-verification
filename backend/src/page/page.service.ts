@@ -13,36 +13,35 @@ export class PageService {
   private logger = new Logger(PageService.name);
   constructor(
     @InjectRepository(Page) private repo: Repository<Page>,
-    private normalizeService: NormalizeService,
     private audioService: AudioService,
   ) {
     this.audioService.subscribe((a: AudioResponseDto) => {
       this.logger.debug('resolve audio :' + JSON.stringify(a));
       this.updateAudioURL(a.page_id, a.url);
     });
-    this.recoverNotCompletedTasks()
+    this.recoverNotCompletedTasks();
   }
   async getAndGetNormlizedText(
     book_id: number,
     page: number,
-    user: number,
+    // user: number,
   ): Promise<Page | undefined> {
     let result = await this.get(book_id, page);
     if (!result) {
       return undefined;
     }
-    //check if raw_text is not empty and text_norm is empty (not normlized)
-    //then normlize it
-    if (result.text_norm === '' && result.text_raw !== '') {
-      const normalize = await this.normalizeService.normalize(result.text_raw);
-      if (normalize.status && normalize.normText !== '') {
-        result = await this.updateTextNormAndReviewer(
-          page,
-          user,
-          normalize.normText,
-        );
-      }
-    }
+    ////check if raw_text is not empty and text_norm is empty (not normlized)
+    ////then normlize it
+    //if (result.text_norm === '' && result.text_raw !== '') {
+    //  const normalize = await this.normalizeService.normalize(result.text_raw);
+    //  if (normalize.status && normalize.normText !== '') {
+    //    result = await this.updateTextNormAndReviewer(
+    //      page,
+    //      user,
+    //      normalize.normText,
+    //    );
+    //  }
+    //}
     return result;
   }
   async get(book_id: number, page: number): Promise<Page> {
@@ -130,13 +129,19 @@ export class PageService {
   async getAllPendings(): Promise<Page[]> {
     return this.repo.find({ status: PageStatus.Pending });
   }
-  async genAudio(page_id: number): Promise<boolean | undefined> {
+  async genAudio(
+    page_id: number,
+    voice_id: string,
+  ): Promise<boolean | undefined> {
     const page: Page = await this.findOne(page_id);
     if (!page) {
       return undefined;
     }
+    //update voice id
+    page.voice_id = voice_id;
+    await this.repo.save(page);
     this.audioService.publish(
-      { page_id: page.id, text: page.text_norm },
+      { page_id: page.id, text: page.text_norm, voice_id },
       (c) => {
         page.task_id = c.id;
         page.status = PageStatus.Pending;
@@ -159,8 +164,9 @@ export class PageService {
         page_id: page.id,
         text: page.text_norm,
         task_id: page.task_id,
+        voice_id: page.voice_id,
       })),
     );
-    this.logger.log('recover: ' + pages.length + ' tasks')
+    this.logger.log('recover: ' + pages.length + ' tasks');
   }
 }
