@@ -70,7 +70,7 @@ export class BookController {
 
   @Get('/:id')
   async get(@Param('id', ParseIntPipe) id: number) {
-    const book = this.bookService.findOne(id);
+    const book = await this.bookService.findOne(id);
     if (!book) {
       throw new NotFoundException();
     }
