@@ -145,6 +145,8 @@ export class PageService {
     }
     //update voice id
     page.voice_id = voice_id;
+    // clear previous audio url when regen
+    page.audio_url = '';
     await this.repo.save(page);
     this.audioService.publish(
       { page_id: page.id, text: page.text_norm, voice_id },
