@@ -30,7 +30,6 @@ import { UserVm } from 'src/user/user.dto';
 
 @Controller('books')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 export class BookController {
   private readonly logger = new Logger(BookController.name);
   private readonly pageSize = 10;
@@ -38,6 +37,7 @@ export class BookController {
     private readonly bookService: BookService,
     @InjectMapper() private readonly mapper: AutoMapper,
   ) {}
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   @Post('upload')
   @ApiConsumes('multipart/form-data')
@@ -51,6 +51,7 @@ export class BookController {
     this.logger.debug(`upload new book : ${file.originalname}`);
     return await this.bookService.create(user.id, file);
   }
+  @UseGuards(JwtAuthGuard)
   @Get()
   async list(@Query('page', ParseIntPipe) page: number) {
     if (page < 0) {
@@ -68,6 +69,7 @@ export class BookController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/:id')
   async get(@Param('id', ParseIntPipe) id: number) {
     const book = await this.bookService.findOne(id);
@@ -77,6 +79,7 @@ export class BookController {
     return book;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   async del(@Param('id', ParseIntPipe) id: number, @User() user: UserVm) {
     const affected = await this.bookService.delete(user.id, id);
@@ -94,7 +97,7 @@ export class BookController {
           resolve();
         }),
       );
-      res.download(filePath);
+      res.download(filePath, name + '.docx');
     } catch (e) {
       /* handle error */
       this.logger.error(e);

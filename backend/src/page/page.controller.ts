@@ -76,12 +76,11 @@ export class PageController {
     const completed = this.service.isAudioTaskCompleted(taskId);
     return { completed };
   }
-  @Put('verified')
+  @Put('toggle_verify')
   async markVerified(@Body() body: PageMarkVerifiedDto, @User() user: UserVm) {
     const result = await this.service.updateStatusAndReviewer(
       body.page_id,
       user.id,
-      PageStatus.Verified,
     );
     if (!result) {
       throw new NotFoundException();

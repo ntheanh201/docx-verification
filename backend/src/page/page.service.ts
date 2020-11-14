@@ -88,13 +88,19 @@ export class PageService {
   async updateStatusAndReviewer(
     page_id: number,
     reviewer_id: number,
-    status: PageStatus,
   ): Promise<Page | undefined> {
     const page = await this.repo.findOne(page_id);
     if (!page) {
       return undefined;
     }
-    page.status = status;
+    switch (page.status) {
+      case PageStatus.Waiting:
+      case PageStatus.Pending:
+        page.status = PageStatus.Verified;
+        break;
+      default:
+        page.status = PageStatus.Pending;
+    }
     page.reviewer = reviewer_id;
     return this.repo.save(page);
   }
