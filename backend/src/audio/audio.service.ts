@@ -37,7 +37,9 @@ export class AudioService {
     this.subscribers = [];
     this.scheduleCheckTasksStatus();
   }
-
+  isProgressing(task_id: string): boolean {
+    return this.queues.some((task) => task.task_id === task_id);
+  }
   recover(tasks: AudioTaskDto[]) {
     this.queues.push(...tasks);
   }

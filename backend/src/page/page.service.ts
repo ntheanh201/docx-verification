@@ -169,4 +169,7 @@ export class PageService {
     );
     this.logger.log('recover: ' + pages.length + ' tasks');
   }
+  isAudioTaskCompleted(task_id: string): boolean {
+    return !this.audioService.isProgressing(task_id);
+  }
 }

@@ -71,6 +71,11 @@ export class PageController {
     }
     return { status: 'success' };
   }
+  @Get('gen_audio/status/:task_id')
+  async genAudioStatus(@Param('task_id') taskId: string) {
+    const completed = this.service.isAudioTaskCompleted(taskId);
+    return { completed };
+  }
   @Put('verified')
   async markVerified(@Body() body: PageMarkVerifiedDto, @User() user: UserVm) {
     const result = await this.service.updateStatusAndReviewer(

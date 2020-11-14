@@ -12,9 +12,9 @@ export class Page {
   status: PageStatus;
   @Column({ nullable: true })
   reviewer: number;
-  @Column({ type: 'nvarchar', length: 10000 })
+  @Column({ type: 'longtext' })
   text_raw: string;
-  @Column({ type: 'nvarchar', length: 10000 })
+  @Column({ type: 'longtext' })
   text_norm: string;
   @Column({ nullable: true })
   task_id: string;
