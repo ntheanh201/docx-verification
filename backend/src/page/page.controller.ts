@@ -14,7 +14,7 @@ import {
 import { InjectMapper } from 'nestjsx-automapper';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserVm } from 'src/user/user.dto';
-import { Page, PageStatus } from './page.entity';
+import { Page } from './page.entity';
 import { PageService } from './page.service';
 import {
   PageGenAudioDto,
