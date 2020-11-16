@@ -180,4 +180,15 @@ export class PageService {
   isAudioTaskCompleted(task_id: string): boolean {
     return !this.audioService.isProgressing(task_id);
   }
+  async getBookProgress(
+    book_id: string,
+  ): Promise<{ verified: number; totals: number }> {
+    const [verified, totalPages] = await Promise.all([
+      this.repo.count({
+        where: { book_id: book_id, status: PageStatus.Verified },
+      }),
+      this.repo.count({ where: { book_id: book_id } }),
+    ]);
+    return { verified, totals: totalPages };
+  }
 }

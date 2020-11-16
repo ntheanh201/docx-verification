@@ -87,4 +87,8 @@ export class PageController {
     }
     return this.mapper.map(result, PageVm, Page);
   }
+  @Get('progress/:book_id')
+  async progress(@Param('book_id') book_id: string) {
+    return this.service.getBookProgress(book_id);
+  }
 }
