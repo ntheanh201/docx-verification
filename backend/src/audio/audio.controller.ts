@@ -9,4 +9,8 @@ export class AudioController {
   getVoices() {
     return this.audioService.getVoices();
   }
+  @Get('pendings')
+  getPendingTasks() {
+    return this.audioService.getPendingTasks();
+  }
 }

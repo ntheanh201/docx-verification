@@ -168,4 +168,8 @@ export class AudioService {
             return ''
         })).toPromise()
     }
+
+    getPendingTasks(): number {
+        return this.queues.length;
+    }
 }
