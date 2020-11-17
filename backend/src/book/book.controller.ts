@@ -18,7 +18,7 @@ import {FileInterceptor} from '@nestjs/platform-express';
 import {ApiBearerAuth, ApiConsumes, ApiBody} from '@nestjs/swagger';
 import {JwtAuthGuard} from 'src/auth/jwt-auth.guard';
 import {User} from 'src/user/user.decorator';
-import { BookMergeDto, BookUploadDto, BookVm} from './book.dto';
+import {BookMergeDto, BookUploadDto, BookVm} from './book.dto';
 import {BookService} from './book.service';
 import {uploadDir} from './constant';
 import * as path from 'path';
@@ -112,6 +112,7 @@ export class BookController {
 
     @Post('merge_audio')
     async mergeAudio(@Body() body: BookMergeDto) {
-        return this.bookService.mergeAllAudioURLS(body.book_id)
+        const audio_url = await this.bookService.mergeAllAudioURLS(body.book_id)
+        return {audio_url, ...body};
     }
 }

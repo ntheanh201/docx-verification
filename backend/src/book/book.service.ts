@@ -84,7 +84,7 @@ export class BookService {
         data: DocxParseDto,
     ) {
         const pages: PageCreateDto[] = [];
-        for (var i = 0, len = data.normed_pages.length; i < len; i++) {
+        for (let i = 0, len = data.normed_pages.length; i < len; i++) {
             const norm = data.normed_pages[i];
             const raw = data.original_pages[i];
             pages.push({
@@ -104,13 +104,20 @@ export class BookService {
         return this.bookRepo.findOne(id);
     }
 
-    async mergeAllAudioURLS(id: number): Promise<string | undefined> {
-        const url: string | undefined = await this.pageService.mergeAllAudioURLs(id)
-        if (!url) {
-            return undefined;
-        }
-        await this.bookRepo.update(id, {audio_url: url})
-        return url
+    async mergeAllAudioURLS(id: number): Promise<any> {
+        return await Promise.race([
+            (async (id: number) => {
+                const url: string | undefined = await this.pageService.mergeAllAudioURLs(id)
+                if (!url) {
+                    return undefined;
+                }
+                await this.bookRepo.update(id, {audio_url: url})
+                return url
+            })(id),
+            new Promise(resolve => {
+                setTimeout(() => resolve(undefined), 10000)
+            })
+        ])
     }
 
 }

@@ -152,7 +152,7 @@ export class AudioService {
             }
             //update current queues with new one without resolved task
             this.queues = remainTasks;
-        }, 5000);
+        }, 30000);
     }
 
     mergeAudioURLS(task_ids: string[]): Promise<string> {
