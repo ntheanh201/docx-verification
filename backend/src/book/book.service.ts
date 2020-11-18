@@ -104,20 +104,13 @@ export class BookService {
         return this.bookRepo.findOne(id);
     }
 
-    async mergeAllAudioURLS(id: number): Promise<any> {
-        return await Promise.race([
-            (async (id: number) => {
-                const url: string | undefined = await this.pageService.mergeAllAudioURLs(id)
-                if (!url) {
-                    return undefined;
-                }
-                await this.bookRepo.update(id, {audio_url: url})
-                return url
-            })(id),
-            new Promise(resolve => {
-                setTimeout(() => resolve(undefined), 10000)
-            })
-        ])
+    async mergeAllAudioURLS(id: number): Promise<string | undefined> {
+        const url: string | undefined = await this.pageService.mergeAllAudioURLs(id)
+        if (!url) {
+            return undefined;
+        }
+        await this.bookRepo.update(id, {audio_url: url})
+        return url
     }
 
 }
