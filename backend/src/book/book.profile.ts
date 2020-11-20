@@ -17,6 +17,16 @@ export class BookProfile extends ProfileBase {
             .forMember(
                 (d) => d.total_pages,
                 mapFrom((d) => d.total_pages),
-            ).forMember(d => d.audio_url, mapFrom((s) => s.audio_url));
+            )
+            .forMember(
+                (d) => d.audio_url,
+                mapFrom((s) => s.audio_url),
+            )
+            .forMember(
+                (d) => d.default_voice,
+                mapFrom((s) => s.default_voice),
+            )
+            .forMember(d => d.created_at,
+                mapFrom((d) => d.created_at));
     }
 }

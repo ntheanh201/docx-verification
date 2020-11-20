@@ -35,8 +35,11 @@ export class Book {
     @AutoMap()
     @Column()
     status: BookStatus;
-
+    @Column()
+    default_voice?: string;
     @AutoMap()
     @ManyToOne(() => User)
     uploader: number;
+    @Column({nullable: true, default: () => `now()`})
+    created_at?: Date;
 }

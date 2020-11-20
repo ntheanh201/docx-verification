@@ -148,26 +148,22 @@ export class PageService {
         return this.repo.find({status: PageStatus.Pending});
     }
 
-    async findAndGenAudio(
-        page_id: number,
-        voice_id: string,
-    ): Promise<boolean | undefined> {
+    async findAndGenAudio(page_id: number): Promise<boolean | undefined> {
         const page: Page = await this.findOne(page_id);
         if (!page) {
             return undefined;
         }
-        await this.genAudio(page, voice_id);
+        await this.genAudio(page);
         return true;
     }
 
-    async genAudio(page: Page, voice_id: string) {
+    async genAudio(page: Page) {
         //update voice id
-        page.voice_id = voice_id;
         // clear previous audio url when regen
         page.audio_url = null;
         await this.repo.save(page);
         await this.audioService.publish(
-            {page_id: page.id, text: page.text_norm, voice_id},
+            {page_id: page.id, text: page.text_norm, voice_id: page.voice_id},
             (c) => {
                 page.task_id = c.id;
                 page.status = PageStatus.Pending;
@@ -214,9 +210,8 @@ export class PageService {
         return {verified, totals: totalPages};
     }
 
-
     async mergeAllAudioURLs(book_id: number): Promise<string | undefined> {
-        type pageKeys = keyof Page
+        type pageKeys = keyof Page;
         const result = await this.repo.find({
             where: {book_id: book_id, status: PageStatus.HasAudio},
             order: {page_num: 'ASC'},
@@ -224,9 +219,9 @@ export class PageService {
         });
 
         const urls = result.map((page) => {
-            return page.task_id
-        })
-        return await this.audioService.mergeAudioURLS(urls)
+            return page.task_id;
+        });
+        return await this.audioService.mergeAudioURLS(urls);
     }
 
     // async getAllPageTaskIDs(book_id: number): Promise<string[]> {
@@ -234,18 +229,26 @@ export class PageService {
     //     return pages.map(page => page.task_id)
     // }
 
-    async genAllAudio(book_id: number, voice_id: string) {
+    async genAllAudio(book_id: number) {
         const pages = await this.repo.find({
             where: {book_id: book_id, status: Not(PageStatus.HasAudio)},
-            order: {page_num: 'ASC'}
+            order: {page_num: 'ASC'},
         });
 
-        for (const page of pages) {
-            await this.genAudio(page, voice_id);
+        const invalids = pages.filter((page) => !page.voice_id)
+        if (invalids.length > 0) {
+            return false
         }
+
+        for (const page of pages) {
+            await this.genAudio(page);
+        }
+        return true
     }
 
-    async getBookGenAudioProgress(book_id: number): Promise<{ generated: number; totals: number }> {
+    async getBookGenAudioProgress(
+        book_id: number,
+    ): Promise<{ generated: number; totals: number }> {
         const [generated, totals] = await Promise.all([
             this.repo.count({
                 where: {book_id: book_id, status: PageStatus.HasAudio},
@@ -254,5 +257,20 @@ export class PageService {
         ]);
         return {generated, totals};
     }
-}
 
+    async cloneAllPages(old_book_id: number, book_id: number, voice_id: string) {
+        const pages = await this.repo.find({where: {book_id: old_book_id}});
+        return this.creates(
+            pages.map((page) => {
+                delete page.id;
+                delete page.task_id;
+                delete page.audio_url;
+                delete page.reviewer;
+                delete page.voice_id;
+                page.book_id = book_id;
+                page.voice_id = voice_id;
+                return page;
+            }),
+        );
+    }
+}

@@ -14,11 +14,11 @@ export class BookUploadDto {
     size: number;
 }
 
-export class BookGetDto {
-    @IsNumberString()
-    @ApiProperty({example: 0, required: true, default: 0})
-    page: number;
-}
+// export class BookGetDto {
+//     @IsNumberString()
+//     @ApiProperty({example: 0, required: true, default: 0})
+//     page: number;
+// }
 
 export class BookVm {
     @AutoMap()
@@ -37,6 +37,10 @@ export class BookVm {
     total_pages: number;
     @AutoMap()
     audio_url: string;
+    @AutoMap()
+    default_voice: string;
+    @AutoMap()
+    created_at: Date;
 }
 
 
@@ -46,3 +50,11 @@ export class BookMergeDto {
     book_id: number;
 }
 
+
+export class BookCloneDto {
+    @Min(0)
+    @ApiProperty({example: 1, required: true})
+    book_id: number;
+    @ApiProperty()
+    voice_id: string;
+}

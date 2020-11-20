@@ -12,13 +12,14 @@ import {
     Param,
     BadRequestException,
     NotFoundException,
-    Response, Req, Body,
+    Response,
+    Body,
 } from '@nestjs/common';
 import {FileInterceptor} from '@nestjs/platform-express';
 import {ApiBearerAuth, ApiConsumes, ApiBody} from '@nestjs/swagger';
 import {JwtAuthGuard} from 'src/auth/jwt-auth.guard';
 import {User} from 'src/user/user.decorator';
-import {BookMergeDto, BookUploadDto, BookVm} from './book.dto';
+import {BookCloneDto, BookMergeDto, BookUploadDto, BookVm} from './book.dto';
 import {BookService} from './book.service';
 import {uploadDir} from './constant';
 import * as path from 'path';
@@ -47,12 +48,24 @@ export class BookController {
     @ApiBody({
         schema: {
             type: 'object',
-            properties: {file: {type: 'string', format: 'binary'}},
+            properties: {
+                file: {type: 'string', format: 'binary'},
+                default_voice: {type: 'string'},
+            },
         },
     })
-    async upload(@UploadedFile() file: BookUploadDto, @User() user: UserVm) {
-        this.logger.debug(`upload new book : ${file.originalname}`);
-        return await this.bookService.create(user.id, file);
+    async upload(
+        @UploadedFile() file: BookUploadDto,
+        @User() user: UserVm,
+        @Body('default_voice') defaultVoice: string,
+    ) {
+        if (!defaultVoice) {
+            throw new BadRequestException('default_voice is required');
+        }
+        this.logger.debug(
+            `upload new book : ${file.originalname} with voice ${defaultVoice}`,
+        );
+        return await this.bookService.create(user.id, file, defaultVoice);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -110,9 +123,21 @@ export class BookController {
         }
     }
 
+    @UseGuards(JwtAuthGuard)
     @Post('merge_audio')
     async mergeAudio(@Body() body: BookMergeDto) {
-        const audio_url = await this.bookService.mergeAllAudioURLS(body.book_id)
+        const audio_url = await this.bookService.mergeAllAudioURLS(body.book_id);
         return {audio_url, ...body};
+    }
+
+    @Post('clone')
+    @UseGuards(JwtAuthGuard)
+    async clone(@Body() body: BookCloneDto) {
+        const book_id = body.book_id;
+        const result = await this.bookService.clone(book_id, body.voice_id);
+        if (!result) {
+            throw new NotFoundException('source book not found');
+        }
+        return result
     }
 }
