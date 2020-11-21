@@ -16,7 +16,7 @@ export class DocxService {
 
   parse(path: string): Promise<DocxParseDto> {
     this.logger.debug(`parse docx file: ${path}`);
-    var data = new FormData();
+    const data = new FormData();
     data.append('file', fs.createReadStream(path));
     return this.httpSerivce
       .post(this.url, data, { headers: data.getHeaders() })

@@ -1,5 +1,10 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { DocxParseDto } from 'src/docx/docx.dto';
@@ -65,7 +70,9 @@ export class BookService {
   async delete(user_id: number, id: number): Promise<number> {
     const book = await this.bookRepo.findOne({ id, uploader: user_id });
     if (!book) {
-      return 0;
+      throw new BadRequestException(
+        `Sách không tồn tại hoặc bạn không phải người upload`,
+      );
     }
     const result = await this.bookRepo.delete(id);
     await this.pageService.deleteAllPages(id);
