@@ -11,6 +11,7 @@ import {AudioService} from '../audio/audio.service';
 import {Page, PageStatus} from './page.entity';
 import {PageCreateDto} from './page.dto';
 import {AudioResponseDto} from 'src/audio/audio.dto';
+import {In} from 'typeorm/browser';
 
 @Injectable()
 export class PageService {
@@ -105,6 +106,7 @@ export class PageService {
             return undefined;
         }
         switch (page.status) {
+            case PageStatus.HasAudio:
             case PageStatus.Waiting:
             case PageStatus.Pending:
                 page.status = PageStatus.Verified;
@@ -265,8 +267,10 @@ export class PageService {
         const [generated, totals] = await Promise.all([
             this.repo.count({
                 where: [
-                    {book_id: book_id, status: PageStatus.HasAudio},
-                    {book_id: book_id, status: PageStatus.Verified},
+                    {
+                        book_id: book_id,
+                        status: In([PageStatus.HasAudio, PageStatus.Verified]),
+                    },
                 ],
             }),
             this.repo.count({where: {book_id: book_id}}),
