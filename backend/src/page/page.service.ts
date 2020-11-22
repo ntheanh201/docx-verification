@@ -1,5 +1,5 @@
 import {InjectRepository} from '@nestjs/typeorm';
-import {Injectable, Logger} from '@nestjs/common';
+import {BadGatewayException, BadRequestException, Injectable, Logger} from '@nestjs/common';
 import {IsNull, Repository, Not} from 'typeorm';
 
 import {AudioService} from '../audio/audio.service';
@@ -218,6 +218,14 @@ export class PageService {
             select: ['task_id' as pageKeys],
         });
 
+        if (result.length === 0) {
+            throw new BadRequestException('Chưa page nào có audio !')
+        }
+
+        const total = await this.repo.count({where: {book_id: book_id}})
+        if (total !== result.length) {
+            throw new BadRequestException('Có 1 số page chưa được sinh audio')
+        }
         const urls = result.map((page) => {
             return page.task_id;
         });

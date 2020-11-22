@@ -28,17 +28,21 @@ import {AutoMapper} from '@nartc/automapper';
 import {Book} from './book.entity';
 import {InjectMapper} from 'nestjsx-automapper';
 import {UserVm} from 'src/user/user.dto';
+import {ConfigService} from "@nestjs/config";
 
 @Controller('books')
 @ApiBearerAuth()
 export class BookController {
     private readonly logger = new Logger(BookController.name);
     private readonly pageSize = 10;
+    private uploadDir: string
 
     constructor(
         private readonly bookService: BookService,
         @InjectMapper() private readonly mapper: AutoMapper,
+        readonly configService: ConfigService,
     ) {
+        this.uploadDir = this.configService.get<string>('UPLOAD_DIR') || uploadDir
     }
 
     @UseGuards(JwtAuthGuard)
@@ -105,7 +109,7 @@ export class BookController {
 
     @Get('download/:saved_name')
     async download(@Param('saved_name') name: string, @Response() res: any) {
-        const filePath = path.join(uploadDir, name);
+        const filePath = path.join(this.uploadDir, name);
         try {
             await new Promise((resolve, reject) =>
                 fs.stat(filePath, (err, stats) => {

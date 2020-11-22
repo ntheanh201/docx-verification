@@ -24,6 +24,7 @@ import {uploadDir} from './constant';
         }),
         DocxModule,
         PageModule,
+        ConfigModule,
     ],
     providers: [BookService],
     controllers: [BookController],
