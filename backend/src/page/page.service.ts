@@ -1,5 +1,10 @@
 import {InjectRepository} from '@nestjs/typeorm';
-import {BadGatewayException, BadRequestException, Injectable, Logger} from '@nestjs/common';
+import {
+    BadGatewayException,
+    BadRequestException,
+    Injectable,
+    Logger,
+} from '@nestjs/common';
 import {IsNull, Repository, Not} from 'typeorm';
 
 import {AudioService} from '../audio/audio.service';
@@ -219,12 +224,12 @@ export class PageService {
         });
 
         if (result.length === 0) {
-            throw new BadRequestException('Chưa page nào có audio !')
+            throw new BadRequestException('Chưa page nào có audio !');
         }
 
-        const total = await this.repo.count({where: {book_id: book_id}})
+        const total = await this.repo.count({where: {book_id: book_id}});
         if (total !== result.length) {
-            throw new BadRequestException('Có 1 số page chưa được sinh audio')
+            throw new BadRequestException('Có 1 số page chưa được sinh audio');
         }
         const urls = result.map((page) => {
             return page.task_id;
@@ -243,15 +248,15 @@ export class PageService {
             order: {page_num: 'ASC'},
         });
 
-        const invalids = pages.filter((page) => !page.voice_id)
+        const invalids = pages.filter((page) => !page.voice_id);
         if (invalids.length > 0) {
-            return false
+            return false;
         }
 
         for (const page of pages) {
             await this.genAudio(page);
         }
-        return true
+        return true;
     }
 
     async getBookGenAudioProgress(
@@ -259,7 +264,10 @@ export class PageService {
     ): Promise<{ generated: number; totals: number }> {
         const [generated, totals] = await Promise.all([
             this.repo.count({
-                where: {book_id: book_id, status: PageStatus.HasAudio},
+                where: [
+                    {book_id: book_id, status: PageStatus.HasAudio},
+                    {book_id: book_id, status: PageStatus.Verified},
+                ],
             }),
             this.repo.count({where: {book_id: book_id}}),
         ]);
