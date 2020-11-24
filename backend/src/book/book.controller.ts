@@ -19,7 +19,13 @@ import {FileInterceptor} from '@nestjs/platform-express';
 import {ApiBearerAuth, ApiConsumes, ApiBody} from '@nestjs/swagger';
 import {JwtAuthGuard} from 'src/auth/jwt-auth.guard';
 import {User} from 'src/user/user.decorator';
-import {BookCloneDto, BookMergeDto, BookUploadDto, BookVm} from './book.dto';
+import {
+    BookCloneDto,
+    BookGetDto,
+    BookMergeDto,
+    BookUploadDto,
+    BookVm, Filter, FilterVm, Sorter, SorterVm,
+} from './book.dto';
 import {BookService} from './book.service';
 import {uploadDir} from './constant';
 import * as path from 'path';
@@ -28,21 +34,21 @@ import {AutoMapper} from '@nartc/automapper';
 import {Book} from './book.entity';
 import {InjectMapper} from 'nestjsx-automapper';
 import {UserVm} from 'src/user/user.dto';
-import {ConfigService} from "@nestjs/config";
+import {ConfigService} from '@nestjs/config';
 
 @Controller('books')
 @ApiBearerAuth()
 export class BookController {
     private readonly logger = new Logger(BookController.name);
     private readonly pageSize = 10;
-    private uploadDir: string
+    private readonly uploadDir: string;
 
     constructor(
         private readonly bookService: BookService,
         @InjectMapper() private readonly mapper: AutoMapper,
         readonly configService: ConfigService,
     ) {
-        this.uploadDir = this.configService.get<string>('UPLOAD_DIR') || uploadDir
+        this.uploadDir = this.configService.get<string>('UPLOAD_DIR') || uploadDir;
     }
 
     @UseGuards(JwtAuthGuard)
@@ -73,18 +79,23 @@ export class BookController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get()
-    async list(@Query('page', ParseIntPipe) page: number) {
-        if (page < 0) {
+    @Post()
+    async list(
+        // @Query('page', ParseIntPipe) page: number,
+        @Body() body: BookGetDto,
+    ) {
+        if (body.page < 0) {
             throw new BadRequestException('page must be greater than 0');
         }
-        const offset = page * this.pageSize;
-        const books = await this.bookService.findFrom(offset, this.pageSize);
+        const sorter = this.mapper.map(body.sorter, Sorter, SorterVm)
+        const filters = this.mapper.map(body.filters, Filter, FilterVm)
+        const offset = body.page * this.pageSize;
+        const books = await this.bookService.findFrom(offset, this.pageSize, filters, sorter);
         const vmBooks = this.mapper.mapArray(books, BookVm, Book);
         const total = await this.bookService.count();
         return {
             books: vmBooks,
-            current_page: page,
+            current_page: body.page,
             total_pages: Math.ceil(total / this.pageSize),
             page_size: this.pageSize,
         };
@@ -142,6 +153,7 @@ export class BookController {
         if (!result) {
             throw new NotFoundException('source book not found');
         }
-        return result
+        return result;
     }
+
 }

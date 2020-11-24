@@ -2,7 +2,7 @@ import {AutoMapper, mapFrom, ProfileBase} from '@nartc/automapper';
 import {Profile} from 'nestjsx-automapper';
 
 import {Book} from './book.entity';
-import {BookVm} from './book.dto';
+import {BookVm, Filter, FilterVm, Sorter, SorterVm} from './book.dto';
 
 @Profile()
 export class BookProfile extends ProfileBase {
@@ -26,7 +26,47 @@ export class BookProfile extends ProfileBase {
                 (d) => d.default_voice,
                 mapFrom((s) => s.default_voice),
             )
-            .forMember(d => d.created_at,
-                mapFrom((d) => d.created_at));
+            .forMember(
+                (d) => d.created_at,
+                mapFrom((d) => d.created_at),
+            );
+    }
+}
+
+@Profile()
+export class SorterProfile extends ProfileBase {
+    constructor(mapper: AutoMapper) {
+        super();
+        mapper
+            .createMap(SorterVm, Sorter)
+            .forMember(
+                (d) => d.field,
+                mapFrom((s) => s.field),
+            )
+            .forMember(
+                (d) => d.order,
+                mapFrom((s) => s.order),
+            );
+    }
+}
+
+@Profile()
+export class FilterProfile extends ProfileBase {
+    constructor(mapper: AutoMapper) {
+        super();
+        mapper
+            .createMap(FilterVm, Filter)
+            .forMember(
+                (d) => d.progress,
+                mapFrom((s) => s.progress),
+            )
+            .forMember(
+                (d) => d.default_voice,
+                mapFrom((s) => s.default_voice),
+            )
+            .forMember(
+                (d) => d.uploader,
+                mapFrom((s) => s.uploader),
+            );
     }
 }
