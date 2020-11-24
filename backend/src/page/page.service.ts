@@ -216,7 +216,7 @@ export class PageService {
     const result = await this.repo.find({
       where: {
         book_id: book_id,
-        status: [PageStatus.HasAudio, PageStatus.Verified],
+        status: In([PageStatus.HasAudio, PageStatus.Verified]),
       },
       order: { page_num: 'ASC' },
       select: ['task_id' as pageKeys],
