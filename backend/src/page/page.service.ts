@@ -1,9 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { IsNull, Repository, Not, In } from 'typeorm';
 
 import { AudioService } from '../audio/audio.service';
@@ -218,7 +214,10 @@ export class PageService {
   async mergeAllAudioURLs(book_id: number): Promise<string | undefined> {
     type pageKeys = keyof Page;
     const result = await this.repo.find({
-      where: { book_id: book_id, status: PageStatus.HasAudio },
+      where: {
+        book_id: book_id,
+        status: [PageStatus.HasAudio, PageStatus.Verified],
+      },
       order: { page_num: 'ASC' },
       select: ['task_id' as pageKeys],
     });
