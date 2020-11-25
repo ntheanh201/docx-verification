@@ -57,10 +57,6 @@ export class FilterProfile extends ProfileBase {
         mapper
             .createMap(FilterVm, Filter)
             .forMember(
-                (d) => d.progress,
-                mapFrom((s) => s.progress),
-            )
-            .forMember(
                 (d) => d.default_voice,
                 mapFrom((s) => s.default_voice),
             )

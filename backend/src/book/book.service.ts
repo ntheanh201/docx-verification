@@ -15,6 +15,7 @@ import {Book, BookStatus} from './book.entity';
 import {BookUploadDto, Filter, FilterVm, Sorter, SorterVm} from './book.dto';
 import {DocxService} from '../docx/docx.service';
 import {PageService} from '../page/page.service';
+import {User} from '../user/user.entity';
 
 @Injectable()
 export class BookService {
@@ -63,16 +64,62 @@ export class BookService {
         filters: Filter,
         sorter: Sorter,
     ): Promise<Book[]> {
+        if (sorter.UseBuildQuery()) {
+            console.log(filters.WhereClause())
+            const results = await this.bookRepo.query(
+                `
+                    select source.*
+                        from (select b.*, u.id as uploader_id, u.username uploader_username, u.name uploader_name, count(p.id) / total_pages progress, u.id uploader
+                              from book as b
+                                       inner join page p on p.book_id = b.id
+                                       inner join user u on u.id = b.uploaderId
+                              where p.status = 'has_audio'
+                                 OR p.status = 'verified'
+                              group by b.id
+                              order by progress ${
+                    sorter.order === 'ASC' ? 'ASC' : 'DESC'
+                }
+                             ) as \`source\`
+                             ${filters.WhereClause()}
+                             limit ?
+                             offset ?
+                        
+                    `,
+                [limit, offset],
+            );
+
+            return results.map((r) => {
+                const u = new User();
+                u.id = r.uploader_id;
+                u.username = r.uploader_username;
+                u.name = r.uploader_name;
+                return {
+                    id: r.id,
+                    name: r.name,
+                    saved_name: r.saved_name,
+                    url: r.url,
+                    size: r.size,
+                    mimetype: r.mimetype,
+                    total_pages: r.total_pages,
+                    audio_url: r.audio_url,
+                    status: r.status,
+                    default_voice: r.default_voice,
+                    created_at: r.created_at,
+                    verified: r.verified,
+                    uploader: u,
+                };
+            });
+        }
         return this.bookRepo.find({
             skip: offset,
             take: limit,
             where: {
-                ...filters.Filter()
+                ...filters.Filter(),
             },
             relations: ['uploader'],
             order: {
                 created_at: 'DESC',
-                ...sorter.Order()
+                ...sorter.Order(),
             },
         });
     }

@@ -1,9 +1,9 @@
 import {ApiProperty} from '@nestjs/swagger';
-import {IsNumber, IsNumberString, Min} from 'class-validator';
+import {IsNumber, Min, IsNotEmpty, IsIn} from 'class-validator';
 import {AutoMap} from '@nartc/automapper';
 import {UserVm} from 'src/user/user.dto';
 import {Type} from 'class-transformer';
-import {In} from "typeorm";
+import {In} from 'typeorm';
 
 export class BookUploadDto {
     fieldname: string;
@@ -16,56 +16,80 @@ export class BookUploadDto {
     size: number;
 }
 
-export class SorterVm {
-    field: string;
-    order: string;
+export enum OrderType {
+    ASC = 'ASC',
+    DESC = 'DESC',
 }
 
+export class SorterVm {
+    @IsNotEmpty()
+    field: string;
+    @IsIn([OrderType.ASC, OrderType.DESC])
+    order: OrderType;
+}
 
 export class FilterVm {
-    progress?: string[];
     uploader?: string[];
     default_voice?: string[];
 }
 
 export class Sorter {
     field: string;
-    order: string;
+    order: OrderType;
 
     Order() {
         if (this.field && (this.order === 'ASC' || this.order === 'DESC')) {
             return {
-                [this.field]: this.order
-            }
+                [this.field]: this.order,
+            };
         }
-        return {}
+        return {};
+    }
+
+    UseBuildQuery() {
+        return this.field === "progress"
     }
 }
 
 export class Filter {
-    progress?: string[];
     uploader?: string[];
     default_voice?: string[];
 
     Filter() {
         const that = this;
-        let result: any = {}
-        console.log(that, "hi")
-        Object.keys(that).forEach(key => {
+        let result: any = {};
+        Object.keys(that).forEach((key) => {
             if (that[key]) {
-                if (key === "uploader") {
-                    result["uploader.name"] = that[key][0]
-                    return
-                }
-                result[key] = In(that[key])
+                result[key] = In(that[key]);
             }
-        })
-        return result
+        });
+        return result;
     }
 
-    UseBuildQuery() {
-        return Array.isArray(this.default_voice)
+    WhereClause() {
+        const filters = {}
+        Object.keys(this).forEach(key => {
+            if (Array.isArray(this[key])) {
+                const i = this[key].reduce((acc, v) => `${acc !== '' ? acc + ', ' : ''} '${v}'`, '')
+                filters[key] = ` IN (${i})`
+            }
+        })
+        if (Object.keys(filters).length === 0) {
+            return ''
+        }
+
+        let where = 'where '
+
+        Object.keys(filters).forEach((key, i) => {
+            if (i !== 0) {
+                where += 'and '
+            }
+            where += `${key} ${filters[key]}`
+        })
+
+        return where
     }
+
 }
 
 export class BookGetDto {
@@ -73,7 +97,10 @@ export class BookGetDto {
     @ApiProperty({example: 0, required: true, default: 0})
     page: number;
     @Type(() => FilterVm)
+    @ApiProperty()
     filters: FilterVm;
+    @IsNotEmpty()
+    @ApiProperty({required: true, default: {field: 'created_at', order: 'DESC'}})
     @Type(() => SorterVm)
     sorter: SorterVm;
 }
