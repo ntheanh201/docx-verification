@@ -29,6 +29,7 @@ export class AudioService {
     private queues: AudioTaskDto[];
     private subscribers: Subscriber[];
     private logger = new Logger(AudioService.name);
+    private compressAPI: string;
 
     constructor(configService: ConfigService, private httpService: HttpService) {
         this.getTaskAPI = configService.get<string>('AUDIO_GET_TASK_API');
@@ -36,6 +37,7 @@ export class AudioService {
         this.getInfoAPI = configService.get<string>('AUDIO_INFO_API');
         this.token = configService.get<string>('AUDIO_TOKEN');
         this.mergeAPI = configService.get<string>('AUDIO_MERGE_API');
+        this.compressAPI = configService.get<string>('AUDIO_COMPRESS_API');
         this.queues = [];
         this.subscribers = [];
         this.scheduleCheckTasksStatus();
@@ -186,5 +188,28 @@ export class AudioService {
 
     getPendingTasks(): number {
         return this.queues.length;
+    }
+
+    async compressAudioURLS(task_ids: string[]) {
+        const data = new FormData();
+        data.append('token', this.token);
+        data.append('chunks', task_ids.join(','));
+        return this.httpService
+            .post<{ status: number; msg: string; url: string }>(this.compressAPI, data, {
+                headers: data.getHeaders(),
+            })
+            .pipe(
+                map((res) => {
+                    return res.data;
+                }),
+                map((res) => {
+                    return res.url;
+                }),
+                catchError((err) => {
+                    this.logger.error(err.toString());
+                    return '';
+                }),
+            )
+            .toPromise();
     }
 }

@@ -199,6 +199,17 @@ export class BookService {
         return url;
     }
 
+    async compressAllAudioURLS(id: number): Promise<string | undefined> {
+        const url: string | undefined = await this.pageService.compressAllAudioURLs(
+            id,
+        );
+        if (!url) {
+            return undefined;
+        }
+        await this.bookRepo.update(id, {compressed_url: url});
+        return url;
+    }
+
     async clone(id: number, voice_id: string): Promise<Book | undefined> {
         const book = await this.bookRepo.findOne(id, {relations: ['uploader']});
         if (!book) {

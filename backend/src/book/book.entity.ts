@@ -33,6 +33,9 @@ export class Book {
     @Column({nullable: true})
     audio_url?: string;
     @AutoMap()
+    @Column({nullable: true})
+    compressed_url?: string;
+    @AutoMap()
     @Column()
     status: BookStatus;
     @Column()

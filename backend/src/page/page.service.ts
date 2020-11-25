@@ -212,28 +212,8 @@ export class PageService {
   }
 
   async mergeAllAudioURLs(book_id: number): Promise<string | undefined> {
-    type pageKeys = keyof Page;
-    const result = await this.repo.find({
-      where: {
-        book_id: book_id,
-        status: In([PageStatus.HasAudio, PageStatus.Verified]),
-      },
-      order: { page_num: 'ASC' },
-      select: ['task_id' as pageKeys],
-    });
-
-    if (result.length === 0) {
-      throw new BadRequestException('Chưa page nào có audio !');
-    }
-
-    const total = await this.repo.count({ where: { book_id: book_id } });
-    if (total !== result.length) {
-      throw new BadRequestException('Có 1 số page chưa được sinh audio');
-    }
-    const urls = result.map((page) => {
-      return page.task_id;
-    });
-    return await this.audioService.mergeAudioURLS(urls);
+    const task_ids = await this.getVerifiedTaskIDs(book_id);
+    return await this.audioService.mergeAudioURLS(task_ids);
   }
 
   // async getAllPageTaskIDs(book_id: number): Promise<string[]> {
@@ -289,5 +269,34 @@ export class PageService {
         return page;
       }),
     );
+  }
+
+  async compressAllAudioURLs(book_id: number) {
+    const task_ids = await this.getVerifiedTaskIDs(book_id);
+    return await this.audioService.compressAudioURLS(task_ids);
+  }
+
+  private async getVerifiedTaskIDs(book_id: number) {
+    type pageKeys = keyof Page;
+    const result = await this.repo.find({
+      where: {
+        book_id: book_id,
+        status: In([PageStatus.HasAudio, PageStatus.Verified]),
+      },
+      order: { page_num: 'ASC' },
+      select: ['task_id' as pageKeys],
+    });
+
+    if (result.length === 0) {
+      throw new BadRequestException('Chưa page nào có audio !');
+    }
+
+    const total = await this.repo.count({ where: { book_id: book_id } });
+    if (total !== result.length) {
+      throw new BadRequestException('Có 1 số page chưa được sinh audio');
+    }
+    return result.map((page) => {
+      return page.task_id;
+    });
   }
 }

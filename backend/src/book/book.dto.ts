@@ -123,6 +123,8 @@ export class BookVm {
     @AutoMap()
     audio_url: string;
     @AutoMap()
+    compressed_url: string;
+    @AutoMap()
     default_voice: string;
     @AutoMap()
     created_at: Date;
@@ -133,6 +135,13 @@ export class BookMergeDto {
     @ApiProperty({example: 1, required: true})
     book_id: number;
 }
+
+export class BookCompressDto {
+    @Min(0)
+    @ApiProperty({example: 1, required: true})
+    book_id: number;
+}
+
 
 export class BookCloneDto {
     @Min(0)

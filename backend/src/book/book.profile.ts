@@ -27,6 +27,10 @@ export class BookProfile extends ProfileBase {
                 mapFrom((s) => s.default_voice),
             )
             .forMember(
+                (d) => d.compressed_url,
+                mapFrom((s) => s.compressed_url),
+            )
+            .forMember(
                 (d) => d.created_at,
                 mapFrom((d) => d.created_at),
             );

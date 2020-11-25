@@ -20,7 +20,7 @@ import {ApiBearerAuth, ApiConsumes, ApiBody} from '@nestjs/swagger';
 import {JwtAuthGuard} from 'src/auth/jwt-auth.guard';
 import {User} from 'src/user/user.decorator';
 import {
-    BookCloneDto,
+    BookCloneDto, BookCompressDto,
     BookGetDto,
     BookMergeDto,
     BookUploadDto,
@@ -142,6 +142,13 @@ export class BookController {
     @Post('merge_audio')
     async mergeAudio(@Body() body: BookMergeDto) {
         const audio_url = await this.bookService.mergeAllAudioURLS(body.book_id);
+        return {audio_url, ...body};
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('compress_audio')
+    async compressAudio(@Body() body: BookCompressDto) {
+        const audio_url = await this.bookService.compressAllAudioURLS(body.book_id);
         return {audio_url, ...body};
     }
 
