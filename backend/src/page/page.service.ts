@@ -17,7 +17,7 @@ export class PageService {
   ) {
     this.audioService.subscribe((a: AudioResponseDto) => {
       this.logger.debug('resolve audio :' + JSON.stringify(a));
-      this.updateAudioURL(a.page_id, a.url);
+      this.updateAudioURL(a.page_id, a.url, a.task_id);
     });
     this.recoverNotCompletedTasks();
   }
@@ -115,8 +115,9 @@ export class PageService {
   async updateAudioURL(
     page_id: number,
     url: string,
+    task_id: string,
   ): Promise<Page | undefined> {
-    const page = await this.repo.findOne(page_id);
+    const page = await this.repo.findOne({ id: page_id, task_id: task_id });
     if (!page) {
       return undefined;
     }
@@ -159,16 +160,13 @@ export class PageService {
   }
 
   async genAudio(page: Page) {
-    //update voice id
-    // clear previous audio url when regen
-    page.audio_url = null;
-    await this.repo.save(page);
     await this.audioService.publish(
       { page_id: page.id, text: page.text_norm, voice_id: page.voice_id },
-      (c) => {
+      async (c) => {
+        page.audio_url = null;
         page.task_id = c.id;
         page.status = PageStatus.Pending;
-        this.save(page);
+        await this.save(page);
       },
     );
   }

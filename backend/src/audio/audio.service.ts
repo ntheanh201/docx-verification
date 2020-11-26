@@ -54,17 +54,18 @@ export class AudioService {
     async publish(task: AudioPublishDto, cb: QueueTaskCallback) {
         this.logger.debug(`publish new task: ${task.page_id} ${task.voice_id}`);
         const taskResponse: callGetTaskApiResponse = await this.getTaskID(task);
+        // this.logger.debug(`get task response: ${JSON.stringify(taskResponse)}`);
         if (taskResponse.status !== 0) {
             this.logger.error('invalid task: ' + JSON.stringify(task));
             return;
         }
         this.logger.debug('init task: ' + JSON.stringify(taskResponse));
-        cb(taskResponse);
         this.queues.push({
             task_id: taskResponse.id,
             page_id: task.page_id,
             voice_id: task.voice_id,
         });
+        await cb(taskResponse);
     }
 
     subscribe(sub: Subscriber) {
@@ -99,9 +100,10 @@ export class AudioService {
         data.append('token', this.token);
         data.append('voiceId', task.voice_id);
         data.append('text', task.text);
-
+        const timeout = 5000
+        // this.logger.debug(`try to get task id: ${task.page_id}`)
         return await this.httpService
-            .post(this.getTaskAPI, data, {headers: {...data.getHeaders()}})
+            .post(this.getTaskAPI, data, {headers: {...data.getHeaders()}, timeout})
             .pipe(
                 map((res: AxiosResponse) => res.data),
                 catchError((err) => {
@@ -131,17 +133,19 @@ export class AudioService {
     private scheduleCheckTasksStatus() {
         const wait = () => new Promise((resolve) => setTimeout(resolve, 30000));
         const handler = async () => {
+            const queues = this.queues;
+            this.queues = [];
             const remainTasks: AudioTaskDto[] = [];
             // this.logger.debug('check queue');
-            for (let i = 0; i < this.queues.length; i += 10) {
-                const pendingsTasks = this.queues
+            for (let i = 0; i < queues.length; i += 10) {
+                const pendingsTasks = queues
                     .slice(i, i + 10)
                     .filter((t) => t.task_id)
                     .map(async (t) => {
                         this.logger.debug('check task: ' + t.task_id);
                         const res = await this.checkTaskStatus(t.task_id)
                         this.logger.debug('task response: ' + JSON.stringify(t))
-                        if (res.status === 0) {
+                        if (res.status === 0 && res.url) {
                             this.logger.debug('task done: ' + res.id);
                             this.publishToAllSubscribers({...t, url: res.url});
                         } else {
@@ -153,7 +157,7 @@ export class AudioService {
                 // use all instead of allSettled because we want to stop when any failure occurred
             }
             // //update current queues with new one without resolved task
-            this.queues = remainTasks;
+            this.queues.push(...remainTasks);
             //
             await wait();
             //
