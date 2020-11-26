@@ -115,14 +115,13 @@ export class AudioService {
     private async checkTaskStatus(
         task_id: string,
     ): Promise<callCheckTaskApiResponse> {
-        const res: callCheckTaskApiResponse = await this.httpService
+        return await this.httpService
             .get(this.checkTaskStatusAPI + task_id)
             .pipe(
                 map((res: AxiosResponse) => res.data),
                 catchError((err) => of({message: err.toString()})),
             )
             .toPromise();
-        return res;
     }
 
     private publishToAllSubscribers(task: AudioResponseDto) {

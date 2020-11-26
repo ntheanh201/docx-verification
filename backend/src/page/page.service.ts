@@ -223,7 +223,7 @@ export class PageService {
 
   async genAllAudio(book_id: number) {
     const pages = await this.repo.find({
-      where: { book_id: book_id, status: Not(PageStatus.HasAudio) },
+      where: { book_id: book_id },
       order: { page_num: 'ASC' },
     });
 
