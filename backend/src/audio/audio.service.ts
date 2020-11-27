@@ -27,6 +27,7 @@ export class AudioService {
     private readonly token: string;
     private mergeAPI: string;
     private queues: AudioTaskDto[];
+    private isChecking: boolean;
     private subscribers: Subscriber[];
     private logger = new Logger(AudioService.name);
     private compressAPI: string;
@@ -39,6 +40,7 @@ export class AudioService {
         this.mergeAPI = configService.get<string>('AUDIO_MERGE_API');
         this.compressAPI = configService.get<string>('AUDIO_COMPRESS_API');
         this.queues = [];
+        this.isChecking = false;
         this.subscribers = [];
         this.scheduleCheckTasksStatus();
     }
@@ -135,6 +137,7 @@ export class AudioService {
         const handler = async () => {
             const queues = this.queues;
             this.queues = [];
+            this.isChecking = true;
             const remainTasks: AudioTaskDto[] = [];
             // this.logger.debug('check queue');
             for (let i = 0; i < queues.length; i += 10) {
@@ -157,6 +160,7 @@ export class AudioService {
                 // use all instead of allSettled because we want to stop when any failure occurred
             }
             // //update current queues with new one without resolved task
+            this.isChecking = false;
             this.queues.push(...remainTasks);
             //
             await wait();
@@ -189,8 +193,8 @@ export class AudioService {
             .toPromise();
     }
 
-    getPendingTasks(): number {
-        return this.queues.length;
+    getPendingTasks(): { tasks: number, checking: boolean } {
+        return {tasks: this.queues.length, checking: this.isChecking};
     }
 
     async compressAudioURLS(task_ids: string[]) {
